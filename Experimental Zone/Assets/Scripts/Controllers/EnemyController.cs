@@ -1,8 +1,6 @@
 using UnityEngine;
-using UnityEngine.AI; // Äëÿ NavMeshAgent
 
-[RequireComponent(typeof(NavMeshAgent))]
-public class NPCAI : Controller
+public class NPCAI : MonoBehaviour
 {
     private enum State
     {
@@ -12,28 +10,28 @@ public class NPCAI : Controller
         OutOfSight
     }
 
-    [SerializeField] private PlayerController target;
+    [SerializeField] private Transform target;
     [SerializeField] private float sightRange;
     [SerializeField] private float chaseRange;
     [SerializeField] private float speedPatrol;
     [SerializeField] private float speedChase;
     [SerializeField] private Transform[] waypoints;
-    private State currentState;
+    [SerializeField] private State currentState;
     private int currentWaypointIndex = 0;
     private Vector3 startPos;
-    private NavMeshAgent agent;
+    private Vector3 currentDestination;
 
     private void Start()
     {
         currentState = State.Patrol;
         startPos = transform.position;
-        agent = GetComponent<NavMeshAgent>();
-        target = PlayerController.Player;
+        currentDestination = waypoints[currentWaypointIndex].position;
+        target = FindObjectOfType<PlayerController>().transform; // Example of finding the player
     }
 
     private void Update()
     {
-        float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
+        float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
         switch (currentState)
         {
@@ -52,7 +50,7 @@ public class NPCAI : Controller
         }
 
         // Update the state
-        if (distanceToTarget > sightRange)
+        if (distanceToTarget > sightRange && currentState != State.Patrol)
         {
             currentState = State.OutOfSight;
         }
@@ -64,35 +62,32 @@ public class NPCAI : Controller
         {
             // If within attack range, you might set the state to Attack or PrepareAttack here
         }
+
+        MoveTowards(currentDestination);
     }
 
     private void Patrol()
     {
         if (waypoints.Length == 0)
             return;
-
-        agent.speed = speedPatrol;
-        if (agent.destination != waypoints[currentWaypointIndex].position)
-        {
-            agent.SetDestination(waypoints[currentWaypointIndex].position);
-        }
-
-        if (agent.remainingDistance <= agent.stoppingDistance)
+        
+        if (Vector3.Distance(transform.position, waypoints[currentWaypointIndex].position) <= 0.1f)
         {
             currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
         }
+
+        currentDestination = waypoints[currentWaypointIndex].position;
     }
 
     private void Chase()
     {
-        agent.speed = speedChase;
-        agent.SetDestination(target.transform.position);
+        currentDestination = target.position;
     }
 
     private void ReturnToStart()
     {
-        agent.SetDestination(startPos);
-        if (Vector3.Distance(transform.position, startPos) <= agent.stoppingDistance)
+        currentDestination = startPos;
+        if (Vector3.Distance(transform.position, startPos) <= 0.1f)
         {
             currentState = State.Patrol;
         }
@@ -100,10 +95,13 @@ public class NPCAI : Controller
 
     private void OutOfSight()
     {
-        // Reset the agent's path if so desired
-        agent.ResetPath();
         currentState = State.ReturnToStart;
     }
 
-    // Additional code omitted
+    private void MoveTowards(Vector3 destination)
+    {
+        // Move the NPC towards the destination
+        float step = (currentState == State.Patrol ? speedPatrol : speedChase) * Time.deltaTime;
+        transform.position = Vector3.MoveTowards(transform.position, destination, step);
+    }
 }

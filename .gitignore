@@ -76,3 +76,4 @@ crashlytics-build.properties
 /Experimental Zone/Library
 /Experimental Zone/Logs
 /Experimental Zone/Temp
+/Experimental Zone/obj/Debug
