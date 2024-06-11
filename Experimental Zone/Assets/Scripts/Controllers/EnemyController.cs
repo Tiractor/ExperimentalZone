@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class NPCAI : MonoBehaviour
+public class NPCAI : Controller
 {
     private enum State
     {
@@ -20,6 +20,42 @@ public class NPCAI : MonoBehaviour
     private int currentWaypointIndex = 0;
     private Vector3 startPos;
     private Vector3 currentDestination;
+    [SerializeField] private LayerMask platformLayerMask; // ”казываем слой, который используетс€ дл€ "этажей"
+    private string currentFloor; // “екущий "этаж" NPC
+
+    private bool IsSameFloor(string targetFloor)
+    {
+        // ѕровер€ем, находитс€ ли цель на том же этаже, что и NPC
+        return targetFloor == currentFloor;
+    }
+
+    private void UpdateFloor()
+    {
+        // ѕроверка находитс€ ли NPC в области действи€ LayerTrigger дл€ нижнего этажа
+        RaycastHit2D hitDown = Physics2D.Raycast(transform.position, Vector2.down, 1f, platformLayerMask);
+        if (hitDown.collider != null)
+        {
+            LayerTrigger triggerDown = hitDown.collider.GetComponent<LayerTrigger>();
+            if (triggerDown != null)
+            {
+                currentFloor = triggerDown.layer;
+                return;
+            }
+        }
+
+        // ѕроверка находитс€ ли NPC в области действи€ LayerTrigger дл€ верхнего этажа
+        RaycastHit2D hitUp = Physics2D.Raycast(transform.position, Vector2.up, 1f, platformLayerMask);
+        if (hitUp.collider != null)
+        {
+            LayerTrigger triggerUp = hitUp.collider.GetComponent<LayerTrigger>();
+            if (triggerUp != null)
+            {
+                currentFloor = triggerUp.layer;
+                return;
+            }
+        }
+    }
+
 
     private void Start()
     {
@@ -103,5 +139,27 @@ public class NPCAI : MonoBehaviour
         // Move the NPC towards the destination
         float step = (currentState == State.Patrol ? speedPatrol : speedChase) * Time.deltaTime;
         transform.position = Vector3.MoveTowards(transform.position, destination, step);
+    }
+
+    private GameObject FindClosestGateway(string targetFloorNumber)
+    {
+        GameObject closestGateway = null;
+        float closestDistance = Mathf.Infinity;
+
+        LayerTrigger[] gateways = FindObjectsOfType<LayerTrigger>();
+        foreach (LayerTrigger gateway in gateways)
+        {
+            if (gateway.layer == targetFloorNumber)
+            {
+                float distance = Vector3.Distance(transform.position, gateway.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestGateway = gateway.gameObject;
+                }
+            }
+        }
+
+        return closestGateway;
     }
 }

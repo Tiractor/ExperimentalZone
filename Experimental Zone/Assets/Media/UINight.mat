@@ -46,9 +46,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _Alpha: 1
-    - _CenterAlpha: 0.5605631
+    - _CenterAlpha: 0.117236376
     - _ColorMask: 15
-    - _EdgeAlpha: 0.70070386
+    - _EdgeAlpha: 0.14654547
     - _EnableExternalAlpha: 0
     - _Fade: 1
     - _OverallAlpha: 1

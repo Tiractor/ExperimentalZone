@@ -6,7 +6,6 @@ using System;
 public class WeatherController : MonoBehaviour
 {
     public Material nightMaterial;
-    public AnimationCurve fadeCurve;
     public float timeValue;
     public float timeOfDay;
     [SerializeField] private float ToWeatherChange = 0;
@@ -24,7 +23,6 @@ public class WeatherController : MonoBehaviour
     {
         // Имитация смены времени суток
         timeValue = Mathf.PingPong(Time.time / timeOfDay, 1.0f);
-        float fadeValue = fadeCurve.Evaluate(timeValue);
 
         // Установка общей прозрачности
         nightMaterial.SetFloat("_EdgeAlpha", timeValue);
@@ -42,11 +40,12 @@ public class WeatherController : MonoBehaviour
         ToWeatherChange = (float)rnd.NextDouble();
         Debug.Log("Погода меняется...");
         Weather on = GetRandomEnumValue();
-        Debug.Log(on + " " + (int)on);
+        currentWeather = on;
+        Debug.Log("... на " + on);
         for (int i =0;i < WeatherObj.Length;++i)
         {
            WeatherObj[i].SetActive(i + 1 == (int)on);
-            Debug.Log(i + 1 == (int)on);
+            //Debug.Log(i + 1 == (int)on);
         }
         
     }
